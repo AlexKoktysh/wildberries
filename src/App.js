@@ -58,6 +58,7 @@ export const App = () => {
   const cancel = () => {
     sessionStorage.clear();
     setOpen(false);
+    changeRows(rows, true);
   };
   const save = () => {
     submitServer();
@@ -67,11 +68,11 @@ export const App = () => {
     const items = JSON.parse(sessionStorage.getItem("editFields"));
     return !(items?.id && items.id === id);
   };
-  const changeRows = (rows) => {
+  const changeRows = (rows, clear) => {
     const custom_rows = rows?.map((item) => ({
       ...item,
-      "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} id={item.id} setEditRows={setEditRows} changeFocusInput={changeFocusInput} />,
-      "seller": <InputComponent label="Поставщик" options={sellerDictionary} id={item.id} setEditRows={setEditRows} changeFocusInput={changeFocusInput} />,
+      "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} id={item.id} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["liloo_article"]]} clear={clear} />,
+      "seller": <InputComponent label="Поставщик" options={sellerDictionary} id={item.id} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["seller"]]} clear={clear} />,
       "edit": <ButtonComponent disabled={checkDisabled(item.id)} submitServer={submitServer} />
     }));
     setRows(custom_rows);
@@ -79,16 +80,16 @@ export const App = () => {
 
   useEffect(() => {
     sessionStorage.setItem("editFields", JSON.stringify(editFields));
-    changeRows(rows);
-  }, [editFields, rows]);
+    changeRows(rows, false);
+  }, [editFields]);
 
   const fetchDate = async (params) => {
     setLoading(true);
     const { columns, rows, totalRecords, sellerDictionary, lilooArticleDictionary } = await getDate(params);
     const custom_rows = rows?.map((item) => ({
       ...item,
-      "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} id={item.id} setEditRows={setEditRows} changeFocusInput={changeFocusInput} />,
-      "seller": <InputComponent label="Поставщик" options={sellerDictionary} id={item.id} setEditRows={setEditRows} changeFocusInput={changeFocusInput} />,
+      "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} id={item.id} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["liloo_article"]]} />,
+      "seller": <InputComponent label="Поставщик" options={sellerDictionary} id={item.id} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["seller"]]} />,
       "edit": <ButtonComponent disabled={checkDisabled(item.id)} submitServer={submitServer} />
     }));
     setRows(custom_rows);

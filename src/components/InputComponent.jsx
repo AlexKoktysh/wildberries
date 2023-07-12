@@ -1,9 +1,9 @@
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export const InputComponent = (props) => {
-    const { label, options, id, setEditRows, changeFocusInput } = props;
+    const { label, options, id, setEditRows, changeFocusInput, defaultValue, clear } = props;
     const [value, setValue] = useState([]);
 
     const change = (newValue) => {
@@ -14,10 +14,15 @@ export const InputComponent = (props) => {
         changeFocusInput(id);
     };
 
+    useEffect(() => {
+        if (clear) return setValue([]);
+    }, [clear]);
+
     return (
         <Autocomplete
-            multiple
+            multiple={true}
             options={options}
+            defaultValue={defaultValue}
             getOptionLabel={(option) => option?.organisation_name || option}
             renderInput={(params) => (
                 <TextField
