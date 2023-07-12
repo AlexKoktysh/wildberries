@@ -1,14 +1,18 @@
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 export const InputComponent = (props) => {
-    const { label, options, id, setEditSellerRows, setEditLilloRows } = props;
+    const { label, options, id, setEditRows, changeFocusInput } = props;
     const [value, setValue] = useState([]);
-    useEffect(() => {
-        if (label === "Артикул в Lillo") setEditLilloRows(id, value);
-        if (label === "Поставщик") setEditSellerRows(id, value);
-    }, [value]);
+
+    const change = (newValue) => {
+        setValue([...newValue]);
+        setEditRows(label, id, newValue);
+    };
+    const focus = () => {
+        changeFocusInput(id);
+    };
 
     return (
         <Autocomplete
@@ -23,11 +27,10 @@ export const InputComponent = (props) => {
                 />
             )}
             onChange={(event, newValue) => {
-                setValue([
-                    ...newValue,
-                ]);
+                change(newValue)
             }}
             value={value}
+            onFocus={focus}
         />
     );
 };

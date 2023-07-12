@@ -1,8 +1,9 @@
 import { Button } from "@mui/material";
+import { useEffect } from "react";
 
-export const ButtonComponent = ({ disabled }) => {
+export const ButtonComponent = ({ submitServer, disabled }) => {
     const submit = () => {
-        console.log("submit");
+        submitServer();
     };
 
     return (
