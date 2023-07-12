@@ -3,7 +3,7 @@ import { TableComponent } from "./components/TableComponent";
 import { Box } from "@mui/material";
 import { getDate } from "./api";
 import { InputComponent } from "./components/InputComponent";
-import { Button } from "@mui/material";
+import { ButtonComponent } from "./components/ButtonComponent";
 
 export const App = () => {
   const [loading, setLoading] = useState(false);
@@ -22,8 +22,26 @@ export const App = () => {
   const [columnFilters, setColumnFilters] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
-  const submit = () => {
-    console.log("submit");
+  const [editSellerFields, setEditSellerFields] = useState({});
+  const [editLilloFields, setEditLilloFields] = useState({});
+
+  const setEditSellerRows = (id, value) => {
+    setEditSellerFields((prev) => {
+      const newValue = { id, seller: [...value] };
+      return {
+        ...prev,
+        ...newValue,
+      };
+    });
+  };
+  useEffect(() => {
+    console.log("editSellerFields", editSellerFields)
+  }, [editSellerFields]);
+  const setEditLilloRows = (id, value) => {
+    setEditLilloFields((prev) => ({
+      ...prev,
+      ...value,
+    }));
   };
 
   const fetchDate = async (params) => {
@@ -31,9 +49,9 @@ export const App = () => {
     const { columns, rows, totalRecords, sellerDictionary, lilooArticleDictionary } = await getDate(params);
     const custom_rows = rows?.map((item) => ({
       ...item,
-      "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} />,
-      "seller": <InputComponent label="Поставщик" options={sellerDictionary} />,
-      "edit": <Button variant='contained' onClick={submit}>Редактировать</Button>
+      "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} id={item.id} setEditSellerRows={setEditSellerRows} setEditLilloRows={setEditLilloRows} />,
+      "seller": <InputComponent label="Поставщик" options={sellerDictionary} id={item.id} setEditSellerRows={setEditSellerRows} setEditLilloRows={setEditLilloRows} />,
+      "edit": <ButtonComponent disabled={true} />
     }));
     setRows(custom_rows);
     setColumns(columns);

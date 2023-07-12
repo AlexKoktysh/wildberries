@@ -1,8 +1,15 @@
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
+import { useEffect, useState } from 'react';
 
 export const InputComponent = (props) => {
-    const { label, options } = props;
+    const { label, options, id, setEditSellerRows, setEditLilloRows } = props;
+    const [value, setValue] = useState([]);
+    useEffect(() => {
+        if (label === "Артикул в Lillo") setEditLilloRows(id, value);
+        if (label === "Поставщик") setEditSellerRows(id, value);
+    }, [value]);
+
     return (
         <Autocomplete
             multiple
@@ -15,6 +22,12 @@ export const InputComponent = (props) => {
                     label={label}
                 />
             )}
+            onChange={(event, newValue) => {
+                setValue([
+                    ...newValue,
+                ]);
+            }}
+            value={value}
         />
     );
 };
