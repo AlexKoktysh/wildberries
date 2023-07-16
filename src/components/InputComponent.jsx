@@ -31,6 +31,7 @@ export const InputComponent = (props) => {
                     label={label}
                 />
             )}
+            sx={{ maxWidth: "300px" }}
             onChange={(event, newValue) => {
                 change(newValue)
             }}

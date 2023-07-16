@@ -11,10 +11,14 @@ const instance = axios.create({
 
 instance.interceptors.response.use(
     (response) => response.data,
-    (error) => alert(error),
+    (error) => ({ error: error.response.data }),
 );
 
 export const getDate = async (params) => {
-    const response = await instance.post("product_cards_list", { ...params });
+    const response = await instance.post("/product_cards_list", { ...params });
+    return response;
+};
+export const editFieldsServer = async (params) => {
+    const response = await instance.post("/edit_product_card", { ...params });
     return response;
 };

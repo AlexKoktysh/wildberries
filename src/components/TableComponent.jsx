@@ -49,6 +49,13 @@ export const TableComponent = (props) => {
                 className: "pagination",
                 ActionsComponent: () => PaginationComponent({ setPagination, pagination, totalRecords })
             }}
+            filterFns={{
+                customFilterFnLillo: (row, id, filterValue) => {
+                    const html = row.getValue(id);
+                    const value = html.props.options;
+                    // return reserved === filterValue;
+                },
+            }}
         />
     );
 };

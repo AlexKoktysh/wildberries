@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { TableComponent } from "./components/TableComponent";
 import { Box } from "@mui/material";
-import { getDate } from "./api";
+import { getDate, editFieldsServer } from "./api";
 import { InputComponent } from "./components/InputComponent";
 import { ButtonComponent } from "./components/ButtonComponent";
 import Dialog from '@mui/material/Dialog';
@@ -10,8 +10,10 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import Alert from "@mui/material/Alert";
 
 export const App = () => {
+  const [allert, setAllert] = useState("");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [columns, setColumns] = useState([]);
@@ -45,9 +47,33 @@ export const App = () => {
     }));
   };
 
-  const submitServer = () => {
-    console.log(JSON.parse(sessionStorage.getItem("editFields")));
+  const submitServer = async () => {
+    setLoading(true);
+    const params = {
+      ...JSON.parse(sessionStorage.getItem("editFields")),
+      filters: columnFilters,
+      sorting,
+      take: pagination.pageSize,
+      skip: pagination.pageSize * (pagination.page - 1),
+      searchText: globalFilter,
+    };
+    console.log("params", params)
+    const data = await editFieldsServer(JSON.parse(sessionStorage.getItem("editFields")));
     sessionStorage.clear();
+    setLoading(false);
+    if (data.error) return setAllert(data.error["ajax-errors"]);
+    const { columns, rows, totalRecords, sellerDictionary, lilooArticleDictionary } = data;
+    const custom_rows = rows?.map((item) => ({
+      ...item,
+      "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} id={item.edit} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["liloo_article"]]} />,
+      "seller": <InputComponent label="Поставщик" options={sellerDictionary} id={item.edit} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["seller"]]} />,
+      "edit": <ButtonComponent disabled={checkDisabled(item.edit)} submitServer={submitServer} />
+    }));
+    setRows(custom_rows);
+    setColumns(columns);
+    setTotalRecords(totalRecords);
+    setSellerDictionary(sellerDictionary);
+    setLilooArticleDictionary(lilooArticleDictionary);
   };
   const changeFocusInput = (id) => {
     const items = JSON.parse(sessionStorage.getItem("editFields"));
@@ -71,9 +97,9 @@ export const App = () => {
   const changeRows = (rows, clear) => {
     const custom_rows = rows?.map((item) => ({
       ...item,
-      "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} id={item.id} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["liloo_article"]]} clear={clear} />,
-      "seller": <InputComponent label="Поставщик" options={sellerDictionary} id={item.id} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["seller"]]} clear={clear} />,
-      "edit": <ButtonComponent disabled={checkDisabled(item.id)} submitServer={submitServer} />
+      "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} id={item["liloo_article"].props.id} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["liloo_article"]]} clear={clear} />,
+      "seller": <InputComponent label="Поставщик" options={sellerDictionary} id={item["liloo_article"].props.id} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["seller"]]} clear={clear} />,
+      "edit": <ButtonComponent disabled={checkDisabled(item["liloo_article"].props.id)} submitServer={submitServer} />
     }));
     setRows(custom_rows);
   };
@@ -85,19 +111,21 @@ export const App = () => {
 
   const fetchDate = async (params) => {
     setLoading(true);
-    const { columns, rows, totalRecords, sellerDictionary, lilooArticleDictionary } = await getDate(params);
+    const data = await getDate(params);
+    setLoading(false);
+    if (data.error) return setAllert(data.error["ajax-errors"]);
+    const { columns, rows, totalRecords, sellerDictionary, lilooArticleDictionary } = data;
     const custom_rows = rows?.map((item) => ({
       ...item,
-      "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} id={item.id} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["liloo_article"]]} />,
-      "seller": <InputComponent label="Поставщик" options={sellerDictionary} id={item.id} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["seller"]]} />,
-      "edit": <ButtonComponent disabled={checkDisabled(item.id)} submitServer={submitServer} />
+      "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} id={item.edit} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["liloo_article"]]} />,
+      "seller": <InputComponent label="Поставщик" options={sellerDictionary} id={item.edit} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["seller"]]} />,
+      "edit": <ButtonComponent disabled={checkDisabled(item.edit)} submitServer={submitServer} />
     }));
     setRows(custom_rows);
     setColumns(columns);
     setTotalRecords(totalRecords);
     setSellerDictionary(sellerDictionary);
     setLilooArticleDictionary(lilooArticleDictionary);
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -115,6 +143,10 @@ export const App = () => {
     columnFilters,
     globalFilter,
   ]);
+
+  if (allert) {
+    return <Alert severity="error">{allert}</Alert>;
+  }
 
   return (
     <Box style={{ height: 1000, width: '100%', overflowY: 'auto' }}>
