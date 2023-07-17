@@ -1,6 +1,8 @@
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import { useEffect, useState } from 'react';
+import Chip from '@mui/material/Chip';
+import { Tooltip } from '@mui/material';
 
 export const InputComponent = (props) => {
     const { label, options, id, setEditRows, changeFocusInput, defaultValue, clear } = props;
@@ -31,6 +33,16 @@ export const InputComponent = (props) => {
                     label={label}
                 />
             )}
+            renderTags={(tagValue, getTagProps) =>
+                tagValue.map((option, index) => (
+                    <Tooltip key={option?.organisation_name || option} title={option?.organisation_name || option}>
+                        <Chip
+                            label={option?.organisation_name || option}
+                            {...getTagProps({ index })}
+                        />
+                    </Tooltip>
+                ))
+            }
             sx={{ maxWidth: "300px" }}
             onChange={(event, newValue) => {
                 change(newValue)
