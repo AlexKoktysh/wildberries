@@ -38,11 +38,13 @@ export const App = () => {
       return setEditFields((prev) => ({
         ...prev,
         id,
+        seller: prev?.seller ? [...prev?.seller] : [],
         liloo_article: [...value],
       }));
     return setEditFields((prev) => ({
       ...prev,
       id,
+      liloo_article: prev?.liloo_article ? [...prev?.liloo_article] : [],
       seller: [...value],
     }));
   };
@@ -57,8 +59,7 @@ export const App = () => {
       skip: pagination.pageSize * (pagination.page - 1),
       searchText: globalFilter,
     };
-    console.log("params", params)
-    const data = await editFieldsServer(JSON.parse(sessionStorage.getItem("editFields")));
+    const data = await editFieldsServer(params);
     sessionStorage.clear();
     setLoading(false);
     if (data.error) return setAllert(data.error["ajax-errors"]);

@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 
 export const InputComponent = (props) => {
     const { label, options, id, setEditRows, changeFocusInput, defaultValue, clear } = props;
-    const [value, setValue] = useState([]);
+    console.log(defaultValue)
+    const [value, setValue] = useState(defaultValue[0]);
 
     const change = (newValue) => {
         setValue([...newValue]);
@@ -22,7 +23,6 @@ export const InputComponent = (props) => {
         <Autocomplete
             multiple={true}
             options={options}
-            defaultValue={defaultValue}
             getOptionLabel={(option) => option?.organisation_name || option}
             renderInput={(params) => (
                 <TextField
