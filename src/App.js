@@ -11,6 +11,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Alert from "@mui/material/Alert";
+import { TextFields } from "./components/TextFields";
 
 export const App = () => {
   const [allert, setAllert] = useState("");
@@ -34,18 +35,33 @@ export const App = () => {
   const [editFields, setEditFields] = useState({});
 
   const setEditRows = (label, id, value) => {
+    let find = {};
+    setRows((prev) => {
+      find = prev.find((el) => el.reserve_qty.props.id === id);
+      return prev;
+    });
     if (label === "Артикул в Lillo")
       return setEditFields((prev) => ({
         ...prev,
         id,
         seller: prev?.seller ? [...prev?.seller] : [],
         liloo_article: [...value],
+        reserve_qty: prev?.reserve_qty ? prev?.reserve_qty : Number(find?.reserve_qty?.props?.value)
+      }));
+    if (label === "reserve_qty")
+      return setEditFields((prev) => ({
+        ...prev,
+        id,
+        seller: prev?.seller ? [...prev?.seller] : [],
+        liloo_article: prev?.liloo_article ? [...prev?.liloo_article] : [],
+        reserve_qty: Number(value),
       }));
     return setEditFields((prev) => ({
       ...prev,
       id,
       liloo_article: prev?.liloo_article ? [...prev?.liloo_article] : [],
       seller: [...value],
+      reserve_qty: prev?.reserve_qty ? prev?.reserve_qty : Number(find?.reserve_qty?.props?.value)
     }));
   };
 
@@ -68,7 +84,8 @@ export const App = () => {
       ...item,
       "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} id={item.edit} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["liloo_article"]]} />,
       "seller": <InputComponent label="Поставщик" options={sellerDictionary} id={item.edit} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["seller"]]} />,
-      "edit": <ButtonComponent disabled={checkDisabled(item.edit)} submitServer={submitServer} />
+      "edit": <ButtonComponent disabled={checkDisabled(item.edit)} submitServer={submitServer} />,
+      "reserve_qty": <TextFields value={item.reserve_qty} onBlur={setEditRows} id={item.edit} />
     }));
     setRows(custom_rows);
     setColumns(columns);
@@ -95,12 +112,13 @@ export const App = () => {
     const items = JSON.parse(sessionStorage.getItem("editFields"));
     return !(items?.id && items.id === id);
   };
-  const changeRows = (rows, clear) => {
-    const custom_rows = rows?.map((item) => ({
+  const changeRows = (default_rows, clear) => {
+    const custom_rows = default_rows?.map((item) => ({
       ...item,
       "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} id={item["liloo_article"].props.id} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["liloo_article"]]} clear={clear} />,
       "seller": <InputComponent label="Поставщик" options={sellerDictionary} id={item["liloo_article"].props.id} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["seller"]]} clear={clear} />,
-      "edit": <ButtonComponent disabled={checkDisabled(item["liloo_article"].props.id)} submitServer={submitServer} />
+      "edit": <ButtonComponent disabled={checkDisabled(item["liloo_article"].props.id)} submitServer={submitServer} />,
+      "reserve_qty": <TextFields value={item["reserve_qty"].props.value} onBlur={setEditRows} id={item["liloo_article"].props.id} clear={clear} />
     }));
     setRows(custom_rows);
   };
@@ -120,7 +138,8 @@ export const App = () => {
       ...item,
       "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} id={item.edit} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["liloo_article"]]} />,
       "seller": <InputComponent label="Поставщик" options={sellerDictionary} id={item.edit} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["seller"]]} />,
-      "edit": <ButtonComponent disabled={checkDisabled(item.edit)} submitServer={submitServer} />
+      "edit": <ButtonComponent disabled={checkDisabled(item.edit)} submitServer={submitServer} />,
+      "reserve_qty": <TextFields value={item.reserve_qty} onBlur={setEditRows} id={item.edit} />
     }));
     setRows(custom_rows);
     setColumns(columns);

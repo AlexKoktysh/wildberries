@@ -6,7 +6,6 @@ import { Tooltip } from '@mui/material';
 
 export const InputComponent = (props) => {
     const { label, options, id, setEditRows, changeFocusInput, defaultValue, clear } = props;
-    console.log(defaultValue)
     const [value, setValue] = useState(defaultValue[0]);
 
     const change = (newValue) => {
@@ -25,6 +24,7 @@ export const InputComponent = (props) => {
         <Autocomplete
             multiple={true}
             options={options}
+            freeSolo={label === "Артикул в Lillo"}
             getOptionLabel={(option) => option?.organisation_name || option}
             renderInput={(params) => (
                 <TextField
