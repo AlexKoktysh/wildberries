@@ -1,12 +1,11 @@
 import { Button } from "@mui/material";
-import { useEffect } from "react";
 
-export const ButtonComponent = ({ submitServer, disabled }) => {
+export const ButtonComponent = ({ submitServer, disabled, text = "Редактировать" }) => {
     const submit = () => {
         submitServer();
     };
 
     return (
-        <Button variant='contained' onClick={submit} disabled={disabled}>Редактировать</Button>
+        <Button variant='contained' onClick={submit} disabled={disabled}>{text}</Button>
     );
 };

@@ -5,15 +5,12 @@ import Chip from '@mui/material/Chip';
 import { Tooltip } from '@mui/material';
 
 export const InputComponent = (props) => {
-    const { label, options, id, setEditRows, changeFocusInput, defaultValue, clear } = props;
+    const { label, options, id, setEditRows, defaultValue, clear } = props;
     const [value, setValue] = useState(defaultValue[0]);
 
     const change = (newValue) => {
         setValue([...newValue]);
         setEditRows(label, id, newValue);
-    };
-    const focus = () => {
-        changeFocusInput(id);
     };
 
     useEffect(() => {
@@ -48,7 +45,6 @@ export const InputComponent = (props) => {
                 change(newValue)
             }}
             value={value}
-            onFocus={focus}
         />
     );
 };

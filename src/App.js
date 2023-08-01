@@ -32,7 +32,7 @@ export const App = () => {
   const [columnFilters, setColumnFilters] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
-  const [editFields, setEditFields] = useState({});
+  const [editFields, setEditFields] = useState([]);
 
   const setEditRows = (label, id, value) => {
     let find = {};
@@ -40,51 +40,122 @@ export const App = () => {
       find = prev.find((el) => el.reserve_qty.props.id === id);
       return prev;
     });
-    if (label === "Артикул в Lillo")
-      return setEditFields((prev) => ({
+    const findField = editFields.find((el) => el.id === id);
+    if (label === "Артикул в Lillo") {
+      if (findField) {
+        const newValue = editFields.map((el) => {
+          if (el.id === id) {
+            return {
+              ...el,
+              liloo_article: [...value],
+            };
+          }
+          return el;
+        });
+        return setEditFields(newValue);
+      }
+      return setEditFields((prev) => {
+        return [
+          ...prev,
+          {
+            id,
+            liloo_article: [...value],
+            seller: [],
+            reserve_qty: Number(find?.reserve_qty?.props?.value),
+          },
+        ];
+      });
+    }
+    if (label === "reserve_qty") {
+      if (findField) {
+        const newValue = editFields.map((el) => {
+          if (el.id === id) {
+            return {
+              ...el,
+              reserve_qty: Number(value),
+            };
+          }
+          return el;
+        });
+        return setEditFields(newValue);
+      }
+      return setEditFields((prev) => {
+        return [
+          ...prev,
+          {
+            id,
+            liloo_article: [],
+            seller: [],
+            reserve_qty: Number(value),
+          },
+        ];
+      });
+    }
+    if (findField) {
+      const newValue = editFields.map((el) => {
+        if (el.id === id) {
+          return {
+            ...el,
+            seller: [...value],
+          };
+        }
+        return el;
+      });
+      return setEditFields(newValue);
+    }
+    return setEditFields((prev) => {
+      return [
         ...prev,
-        id,
-        seller: prev?.seller ? [...prev?.seller] : [],
-        liloo_article: [...value],
-        reserve_qty: prev?.reserve_qty ? prev?.reserve_qty : Number(find?.reserve_qty?.props?.value)
-      }));
-    if (label === "reserve_qty")
-      return setEditFields((prev) => ({
-        ...prev,
-        id,
-        seller: prev?.seller ? [...prev?.seller] : [],
-        liloo_article: prev?.liloo_article ? [...prev?.liloo_article] : [],
-        reserve_qty: Number(value),
-      }));
-    return setEditFields((prev) => ({
-      ...prev,
-      id,
-      liloo_article: prev?.liloo_article ? [...prev?.liloo_article] : [],
-      seller: [...value],
-      reserve_qty: prev?.reserve_qty ? prev?.reserve_qty : Number(find?.reserve_qty?.props?.value)
-    }));
+        {
+          id,
+          liloo_article: [],
+          seller: [...value],
+          reserve_qty: Number(find?.reserve_qty?.props?.value),
+        },
+      ];
+    });
   };
 
-  const submitServer = async () => {
+  const editRow = (id) => {
+    setOpen(true);
+    sessionStorage.setItem("fieldId", id);
+  };
+
+  const submitServer = async (id) => {
     setLoading(true);
-    const params = {
-      ...JSON.parse(sessionStorage.getItem("editFields")),
-      filters: columnFilters,
-      sorting,
-      take: pagination.pageSize,
-      skip: pagination.pageSize * (pagination.page - 1),
-      searchText: globalFilter,
-    };
+    let params = {};
+    if (id) {
+      const items = JSON.parse(sessionStorage.getItem("editFields"));
+      const field = items.find((el) => el.id === Number(id));
+      params = {
+        field: [field],
+        filters: columnFilters,
+        sorting,
+        take: pagination.pageSize,
+        skip: pagination.pageSize * (pagination.page - 1),
+        searchText: globalFilter,
+      };
+    } else {
+      params = {
+        field: JSON.parse(sessionStorage.getItem("editFields")),
+        filters: columnFilters,
+        sorting,
+        take: pagination.pageSize,
+        skip: pagination.pageSize * (pagination.page - 1),
+        searchText: globalFilter,
+      };
+    }
     const data = await editFieldsServer(params);
-    sessionStorage.clear();
+    sessionStorage.removeItem("editFields");
+    sessionStorage.removeItem("fieldId");
     setLoading(false);
     if (data.error) return setAllert(data.error["ajax-errors"]);
     const { columns, rows, totalRecords, sellerDictionary, lilooArticleDictionary } = data;
     const custom_rows = rows?.map((item) => ({
       ...item,
-      "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} id={item.edit} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["liloo_article"]]} />,
-      "seller": <InputComponent label="Поставщик" options={sellerDictionary} id={item.edit} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["seller"]]} />,
-      "edit": <ButtonComponent disabled={checkDisabled(item.edit)} submitServer={submitServer} />,
+      "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} id={item.edit} setEditRows={setEditRows} defaultValue={[item["liloo_article"]]} />,
+      "seller": <InputComponent label="Поставщик" options={sellerDictionary} id={item.edit} setEditRows={setEditRows} defaultValue={[item["seller"]]} />,
+      "edit": <ButtonComponent disabled={checkDisabled(item.edit)} submitServer={() => editRow(item.edit)} />,
       "reserve_qty": <TextFields value={item.reserve_qty} onBlur={setEditRows} id={item.edit} />
     }));
     setRows(custom_rows);
@@ -93,16 +164,10 @@ export const App = () => {
     setSellerDictionary(sellerDictionary);
     setLilooArticleDictionary(lilooArticleDictionary);
   };
-  const changeFocusInput = (id) => {
-    const items = JSON.parse(sessionStorage.getItem("editFields"));
-    if (items?.id && items.id !== id) {
-      setOpen(true);
-    }
-  };
   const cancel = () => {
-    sessionStorage.clear();
+    const id = sessionStorage.getItem("fieldId")
+    submitServer(id);
     setOpen(false);
-    changeRows(rows, true);
   };
   const save = () => {
     submitServer();
@@ -110,21 +175,22 @@ export const App = () => {
   };
   const checkDisabled = (id) => {
     const items = JSON.parse(sessionStorage.getItem("editFields"));
-    return !(items?.id && items.id === id);
+    const findItem = items.find((el) => el.id === id);
+    return !(findItem);
   };
   const changeRows = (default_rows, clear) => {
     const custom_rows = default_rows?.map((item) => ({
       ...item,
-      "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} id={item["liloo_article"].props.id} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["liloo_article"]]} clear={clear} />,
-      "seller": <InputComponent label="Поставщик" options={sellerDictionary} id={item["liloo_article"].props.id} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["seller"]]} clear={clear} />,
-      "edit": <ButtonComponent disabled={checkDisabled(item["liloo_article"].props.id)} submitServer={submitServer} />,
+      "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} id={item["liloo_article"].props.id} setEditRows={setEditRows} defaultValue={[item["liloo_article"]]} clear={clear} />,
+      "seller": <InputComponent label="Поставщик" options={sellerDictionary} id={item["liloo_article"].props.id} setEditRows={setEditRows} defaultValue={[item["seller"]]} clear={clear} />,
+      "edit": <ButtonComponent disabled={checkDisabled(item["liloo_article"].props.id)} submitServer={() => editRow(item["liloo_article"].props.id)} />,
       "reserve_qty": <TextFields value={item["reserve_qty"].props.value} onBlur={setEditRows} id={item["liloo_article"].props.id} clear={clear} />
     }));
     setRows(custom_rows);
   };
 
   useEffect(() => {
-    sessionStorage.setItem("editFields", JSON.stringify(editFields));
+    sessionStorage.setItem("editFields", JSON.stringify([...editFields]));
     changeRows(rows, false);
   }, [editFields]);
 
@@ -136,9 +202,9 @@ export const App = () => {
     const { columns, rows, totalRecords, sellerDictionary, lilooArticleDictionary } = data;
     const custom_rows = rows?.map((item) => ({
       ...item,
-      "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} id={item.edit} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["liloo_article"]]} />,
-      "seller": <InputComponent label="Поставщик" options={sellerDictionary} id={item.edit} setEditRows={setEditRows} changeFocusInput={changeFocusInput} defaultValue={[item["seller"]]} />,
-      "edit": <ButtonComponent disabled={checkDisabled(item.edit)} submitServer={submitServer} />,
+      "liloo_article": <InputComponent label="Артикул в Lillo" options={lilooArticleDictionary} id={item.edit} setEditRows={setEditRows} defaultValue={[item["liloo_article"]]} />,
+      "seller": <InputComponent label="Поставщик" options={sellerDictionary} id={item.edit} setEditRows={setEditRows} defaultValue={[item["seller"]]} />,
+      "edit": <ButtonComponent disabled={checkDisabled(item.edit)} submitServer={() => editRow(item.edit)} />,
       "reserve_qty": <TextFields value={item.reserve_qty} onBlur={setEditRows} id={item.edit} />
     }));
     setRows(custom_rows);
@@ -202,6 +268,7 @@ export const App = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      <ButtonComponent text="Сохранить все" disabled={!editFields.length} submitServer={submitServer} />
     </Box>
   );
 };
